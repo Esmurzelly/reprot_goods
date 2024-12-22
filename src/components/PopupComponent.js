@@ -3,8 +3,10 @@ import React, { useEffect, useState } from 'react'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css';
 import { db } from '../firebase';
+import Loader from './Loader';
 
 const PopupComponent = () => {
+    const [loading, setLoading] = useState(false);
     const [store, setStore] = useState({
         name: '',
         type: '',
@@ -35,24 +37,34 @@ const PopupComponent = () => {
         e.preventDefault();
 
         try {
+            setLoading(true);
             const docRef = await addDoc(collection(db, "store"), {
                 store: store
             });
             
             console.log('docRef from addItem function', docRef);
-            console.log("Document written with ID: ", docRef.id);
+            setLoading(false);
         } catch (error) {
             console.log('error of adding item', error);
+            setLoading(false);
         }
     }
 
     useEffect(() => {
-        console.log('store from useEffect', store);
+        // console.log('store from useEffect', store);
     }, [store]);
 
     useEffect(() => {
         multipleQuantityToPrice();
-    }, [store.price, store.quantity, store.total_price])
+    }, [store.price, store.quantity, store.total_price]);
+
+    if(loading) {
+        return (
+            <div className='w-full min-h-screen bg-slate-300'>
+                <Loader />
+            </div>
+        )
+    }
 
     return (
         <Popup
@@ -118,7 +130,10 @@ const PopupComponent = () => {
                             close modal
                         </button> */}
 
-                        <button type='submit' onClick={addItem}>
+                        <button type='submit' onClick={(e) => {
+                            addItem(e);
+                            close();
+                        }}>
                             Add item
                         </button>
                     </div>

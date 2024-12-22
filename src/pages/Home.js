@@ -44,6 +44,8 @@ const Home = () => {
                 <NavLink to={'/sells'} className={'border bg-green-600 text-black'}>Sells</NavLink>
             </div>
 
+            {/* tableComponent */}
+
             {userData ? <button onClick={handleLogout}>Log out</button> : <NavLink to={'/login'}>Login</NavLink>}
 
         </>
