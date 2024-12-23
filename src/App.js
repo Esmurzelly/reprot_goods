@@ -6,12 +6,34 @@ import NotFound from './pages/NotFound';
 import Store from './pages/Store';
 import Sells from './pages/Sells';
 import Layout from './components/Layout'
+import { getAuth } from 'firebase/auth';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
+  // const [userData, setUserData] = useState();
+  const authUser = getAuth();
+  console.log('auth', authUser.currentUser);
+
+  // useEffect(() => {
+  //   onAuthStateChanged(auth, (user) => {
+  //     if (user) {
+  //       setUserData(user)
+  //     } else {
+  //       console.log('user is logged out')
+  //     }
+  //   })
+  // }, []);
+
+  // console.log('user data from App.js', userData)
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path='/' element={<Layout />}>
+          {authUser 
+            ? <Route index element={<Home />} /> 
+            :  <Route index element={<LogIn />} /> 
+          }
           <Route index element={<Home />} />
           <Route path='/login' element={<LogIn />} />
           <Route path='/signup' element={<SignUp />} />
@@ -20,6 +42,7 @@ function App() {
           <Route path='/signup' element={<NotFound />} />
         </Route>
       </Routes>
+      <ToastContainer />
     </BrowserRouter>
   );
 }

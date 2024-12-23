@@ -3,11 +3,13 @@ import PopupComponent from '../components/PopupComponent'
 import { collection, deleteDoc, getDocs, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import Loader from '../components/Loader';
+import { useNavigate } from 'react-router-dom';
 
 const Store = () => {
   const [storeItems, setStoreItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const categories = ['Name', 'Type', 'Quantity', "Price", "Total price"]
+  const categories = ['Name', 'Type', 'Quantity', "Price", "Total price"];
+  const navigate = useNavigate();
 
   const fetchPost = async () => {
     try {
@@ -118,6 +120,8 @@ const Store = () => {
           </tbody>
         </table>
       </div>
+      <button onClick={() => navigate(-1)}>Back</button>
+
     </div>
 
   )

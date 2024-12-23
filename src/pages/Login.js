@@ -2,12 +2,12 @@ import React, { useState } from 'react'
 import { useNavigate, NavLink } from 'react-router-dom';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { toast } from 'react-toastify';
 
 const LogIn = () => {
-  const navigate = useNavigate();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const onLogin = (e) => {
     e.preventDefault();
@@ -16,9 +16,11 @@ const LogIn = () => {
         const user = userCredential.user;
         navigate('/');
         console.log('user from Login', user);
+        toast("You logged in successfully!");
       })
       .catch(error => {
         console.log('error from Login', error);
+        toast("Error");
       });
   };
 
