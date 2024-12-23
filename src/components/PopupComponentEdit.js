@@ -18,13 +18,6 @@ const PopupComponentEdit = ({ id, initialData }) => {
     const [toSelling, setToSelling] = useState('');
     const authUser = getAuth();
 
-    const multipleQuantityToPrice = () => {
-        setStore((prev) => ({
-            ...prev,
-            total_price: store.price * store.quantity
-        }))
-    }
-
     const handleChange = e => {
         const { name, value } = e.target;
         const newValue = name === 'price' || name === 'quantity' || name === 'total_price' ? Number(value) : value
@@ -76,22 +69,69 @@ const PopupComponentEdit = ({ id, initialData }) => {
         try {
             setLoading(true);
 
+            const storeDocRef = doc(db, "store", storeItemId);
+            const storeDocSnap = await getDoc(storeDocRef);
+
+            if (!storeDocSnap.exists()) {
+                console.error(`Store document with ID ${storeItemId} not found.`);
+                setLoading(false);
+                return;
+            }
+
+            const currentStoreData = storeDocSnap.data();
+
+            const newQuantityInStore = currentStoreData.store.quantity - Number(toSelling);
+
+            if (newQuantityInStore < 0) {
+                console.error("Not enough items in store for selling.");
+                setLoading(false);
+                return;
+            }
+
+            const newTotalPrice = newQuantityInStore * currentStoreData.store.price;
+
+            const updadeRefDocStoreItem = await updateDoc(storeDocRef, {
+                'store.quantity': newQuantityInStore,
+                'store.total_price': newTotalPrice,
+            });
+
+            console.log(`Updated store document: ${storeItemId} successfully.`);
+
+
+
+
+
             const existingItem = sellsItem.find(item => item.storeItemId === storeItemId);
             console.log('existingItem from sellingNum func', existingItem);
+            const pricePerUnit = currentStoreData.store.price;
 
             if (existingItem) {
+                const totalSoldUnits = existingItem.soldNumber + Number(toSelling);
+                const newTotalPrice = totalSoldUnits * pricePerUnit;
+
+                const initialTotalPrice = Number(toSelling) * pricePerUnit;
+
+                const newQuantityInSells = currentStoreData.store.quantity - Number(toSelling); // Берем из store!
+
                 const updatedocRef = await updateDoc(doc(db, "sells", existingItem.id), {
                     soldNumber: existingItem.soldNumber + Number(toSelling),
                     sells: {
                         ...existingItem.sells,
-                        quantity: existingItem.sells.quantity - Number(toSelling)
+                        total_price: newTotalPrice,
+                        quantity: newQuantityInSells
                     },
                 });
                 console.log('updatedocRef from toSellingNumber function', updatedocRef);
                 console.log(`Item with storeItemId ${storeItemId} updated successfully.`);
             } else {
+                const initialTotalPrice = Number(toSelling) * pricePerUnit;
+
                 const docRef = await addDoc(collection(db, "sells"), {
-                    sells: store,
+                    sells: {
+                        ...currentStoreData.store,
+                        quantity: newQuantityInStore, // Создаем с новым количеством
+                        total_price: initialTotalPrice,
+                    },
                     soldNumber: Number(toSelling),
                     userId: authUser?.currentUser?.uid,
                     storeItemId,
@@ -101,27 +141,6 @@ const PopupComponentEdit = ({ id, initialData }) => {
             }
 
             console.log('storeItemId', storeItemId);
-
-            const storeDocRef = doc(db, "store", storeItemId);
-            const storeDocSnap = await getDoc(storeDocRef);
-
-            if (storeDocSnap.exists()) {
-                const currentStoreData = storeDocSnap.data();
-                console.log('currentStoreData', currentStoreData);
-
-                const newQuantity = currentStoreData.store.quantity - Number(toSelling);
-                const newTotalPrice = newQuantity * currentStoreData.store.price;
-
-                const updadeRefDocStoreItem = await updateDoc(storeDocRef, {
-                    'store.quantity': newQuantity,
-                    'store.total_price': newTotalPrice,
-                });
-
-                console.log(`updadeRefDocStoreItem from toSelling func`, updadeRefDocStoreItem);
-                console.log(`Updated store document: ${storeItemId} successfully.`);
-            } else {
-                console.error(`Store document with ID ${storeItemId} not found.`);
-            }
 
 
             setLoading(false);
@@ -148,10 +167,6 @@ const PopupComponentEdit = ({ id, initialData }) => {
 
     console.log('sellsItem from editComponent', sellsItem);
     console.log('storeItem from editComponent', store);
-
-    // useEffect(() => {
-    //     multipleQuantityToPrice();
-    // }, [store.price, store.quantity, store.total_price]);
 
     if (loading) return <div className='w-full min-h-screen bg-slate-300'><Loader /></div>
 
