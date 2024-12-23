@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import PopupComponent from '../components/PopupComponent'
+import PopupComponentEdit from '../components/PopupComponentEdit'
 import { collection, deleteDoc, getDocs, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth';
 
 const Store = () => {
   const [storeItems, setStoreItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const categories = ['Name', 'Type', 'Quantity', "Price", "Total price"];
   const navigate = useNavigate();
+  const authUser = getAuth();
 
   const fetchPost = async () => {
     try {
@@ -18,7 +21,7 @@ const Store = () => {
       const newData = querySnapshot.docs.map((itemDoc) => ({
         ...itemDoc.data(),
         id: itemDoc.id,
-      }));
+      })).filter(item => item?.userId === authUser?.currentUser?.uid);
 
       setStoreItems(newData);
       setLoading(false);
@@ -108,7 +111,7 @@ const Store = () => {
                     {item.store.total_price}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</a>
+                    <PopupComponentEdit id={item.id} initialData={item.store} />
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button onClick={() => deleteItem(item.id)} className="font-medium text-red-600 dark:text-red-500 hover:underline">

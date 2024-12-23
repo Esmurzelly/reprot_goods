@@ -8,11 +8,10 @@ import Sells from './pages/Sells';
 import Layout from './components/Layout'
 import { getAuth } from 'firebase/auth';
 import { ToastContainer } from 'react-toastify';
+import { useEffect } from 'react';
 
 function App() {
-  // const [userData, setUserData] = useState();
   const authUser = getAuth();
-  console.log('auth', authUser.currentUser);
 
   // useEffect(() => {
   //   onAuthStateChanged(auth, (user) => {
@@ -26,6 +25,11 @@ function App() {
 
   // console.log('user data from App.js', userData)
 
+
+  // doesn't show auth??
+  // useEffect(() => { 
+  //   console.log('auth', authUser.currentUser);
+  // }, [authUser.currentUser]);
   return (
     <BrowserRouter>
       <Routes>
