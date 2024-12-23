@@ -102,10 +102,10 @@ const Store = () => {
                     {item.store.type}
                   </td>
                   <td className="px-6 py-4">
-                    {item.store.price}
+                    {item.store.quantity}
                   </td>
                   <td className="px-6 py-4">
-                    {item.store.quantity}
+                    {item.store.price}
                   </td>
                   <td className="px-6 py-4">
                     {item.store.total_price}

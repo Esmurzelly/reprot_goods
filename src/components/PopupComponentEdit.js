@@ -1,9 +1,10 @@
-import { collection, doc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css';
 import { db } from '../firebase';
 import Loader from './Loader';
+import { getAuth } from 'firebase/auth';
 
 const PopupComponentEdit = ({ id, initialData }) => {
     const [loading, setLoading] = useState(false);
@@ -13,7 +14,9 @@ const PopupComponentEdit = ({ id, initialData }) => {
         quantity: '',
         price: '',
     });
-    const [toSelling, setToSelling] = useState();
+    const [sellsItem, setSellsItem] = useState([]);
+    const [toSelling, setToSelling] = useState('');
+    const authUser = getAuth();
 
     const multipleQuantityToPrice = () => {
         setStore((prev) => ({
@@ -32,6 +35,25 @@ const PopupComponentEdit = ({ id, initialData }) => {
         console.log('store from HandleChange function', store)
     };
 
+    const fetchSellsItems = async () => {
+        try {
+            setLoading(true);
+            const querySnapshot = await getDocs(collection(db, "sells"));
+            const newData = querySnapshot.docs.map((itemDoc) => ({
+                ...itemDoc.data(),
+                id: itemDoc.id,
+            })).filter(item => item?.userId === authUser?.currentUser?.uid);
+
+            setSellsItem(newData);
+            setLoading(false);
+
+            console.log('Fetched data:', newData);
+        } catch (error) {
+            console.error('Error fetching documents:', error);
+            setLoading(false);
+        }
+    }
+
     const editItem = async () => {
         try {
             setLoading(true);
@@ -43,6 +65,65 @@ const PopupComponentEdit = ({ id, initialData }) => {
                 'store.total_price': store.price * store.quantity,
             });
             console.log('updateDocItem from editItem function', updateDocItem);
+            setLoading(false);
+        } catch (error) {
+            console.log('error of adding item', error);
+            setLoading(false);
+        }
+    };
+
+    const toSellingNumber = async (storeItemId) => {
+        try {
+            setLoading(true);
+
+            const existingItem = sellsItem.find(item => item.storeItemId === storeItemId);
+            console.log('existingItem from sellingNum func', existingItem);
+
+            if (existingItem) {
+                const updatedocRef = await updateDoc(doc(db, "sells", existingItem.id), {
+                    soldNumber: existingItem.soldNumber + Number(toSelling),
+                    sells: {
+                        ...existingItem.sells,
+                        quantity: existingItem.sells.quantity - Number(toSelling)
+                    },
+                });
+                console.log('updatedocRef from toSellingNumber function', updatedocRef);
+                console.log(`Item with storeItemId ${storeItemId} updated successfully.`);
+            } else {
+                const docRef = await addDoc(collection(db, "sells"), {
+                    sells: store,
+                    soldNumber: Number(toSelling),
+                    userId: authUser?.currentUser?.uid,
+                    storeItemId,
+                });
+
+                console.log('docRef from toSellingNumber function', docRef);
+            }
+
+            console.log('storeItemId', storeItemId);
+
+            const storeDocRef = doc(db, "store", storeItemId);
+            const storeDocSnap = await getDoc(storeDocRef);
+
+            if (storeDocSnap.exists()) {
+                const currentStoreData = storeDocSnap.data();
+                console.log('currentStoreData', currentStoreData);
+
+                const newQuantity = currentStoreData.store.quantity - Number(toSelling);
+                const newTotalPrice = newQuantity * currentStoreData.store.price;
+
+                const updadeRefDocStoreItem = await updateDoc(storeDocRef, {
+                    'store.quantity': newQuantity,
+                    'store.total_price': newTotalPrice,
+                });
+
+                console.log(`updadeRefDocStoreItem from toSelling func`, updadeRefDocStoreItem);
+                console.log(`Updated store document: ${storeItemId} successfully.`);
+            } else {
+                console.error(`Store document with ID ${storeItemId} not found.`);
+            }
+
+
             setLoading(false);
         } catch (error) {
             console.log('error of adding item', error);
@@ -60,6 +141,13 @@ const PopupComponentEdit = ({ id, initialData }) => {
             });
         };
     }, [initialData]);
+
+    useEffect(() => {
+        fetchSellsItems();
+    }, []);
+
+    console.log('sellsItem from editComponent', sellsItem);
+    console.log('storeItem from editComponent', store);
 
     // useEffect(() => {
     //     multipleQuantityToPrice();
@@ -106,7 +194,7 @@ const PopupComponentEdit = ({ id, initialData }) => {
                                     <label>To selling</label>
                                     <input value={toSelling} name='toSelling' className='border w-48' type='number' onChange={(e) => setToSelling(e.target.value)} />
                                 </div>
-                                <button>Send</button>
+                                <button onClick={() => toSellingNumber(id)}>Send</button>
                             </div>
 
                             {/* <div className='w-full flex flex-row justify-between'>
