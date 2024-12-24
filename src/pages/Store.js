@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import PopupComponent from '../components/PopupComponent'
+import AddStoreItemPopup from '../components/AddStoreItemPopup'
 import PopupComponentEdit from '../components/PopupComponentEdit'
 import { collection, deleteDoc, getDocs, doc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -26,7 +26,6 @@ const Store = () => {
       setStoreItems(newData);
       setLoading(false);
 
-      console.log('Fetched data:', newData);
     } catch (error) {
       console.error('Error fetching documents:', error);
       setLoading(false);
@@ -47,11 +46,6 @@ const Store = () => {
     }
   }
 
-
-  useEffect(() => {
-    console.log('storeItems from useEffect', storeItems)
-  }, [storeItems]);
-
   useEffect(() => {
     fetchPost();
   }, []);
@@ -62,12 +56,12 @@ const Store = () => {
         <Loader />
       </div>
     )
-  }
+  };
 
   return (
     <div className='relative'>
       <h1 className='text-3xl'>Store</h1>
-      <PopupComponent />
+      <AddStoreItemPopup loading={loading} setLoading={setLoading} />
 
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -110,8 +104,9 @@ const Store = () => {
                   <td className="px-6 py-4">
                     {item.store.total_price}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <PopupComponentEdit id={item.id} initialData={item.store} />
+                  <td className="px-6 py-4 text-right"> 
+                    {/* problem is here!!! */}
+                    <PopupComponentEdit id={item.id} initialData={item.store} setStoreItems={setStoreItems} storeItems={storeItems} loading={loading} setLoading={setLoading} />
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button onClick={() => deleteItem(item.id)} className="font-medium text-red-600 dark:text-red-500 hover:underline">

@@ -2,10 +2,12 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import React, { useEffect, useState } from 'react'
 import { auth } from '../firebase';
 import { useNavigate, NavLink } from 'react-router-dom';
-import PopupComponent from '../components/PopupComponent'
+import AddItemPopup from '../components/AddStoreItemPopup'
+import Loader from '../components/Loader';
 
 const Home = () => {
     const [userData, setUserData] = useState();
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
@@ -13,31 +15,47 @@ const Home = () => {
         signOut(auth).then(() => {
             navigate('/login');
             console.log("Signed out successfully");
+        }).catch(error => {
+            console.log('error from logging out', error)
         })
-            .catch(error => {
-                console.log('error from logging out', error)
-            })
     }
 
     useEffect(() => {
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // const uid = user.uid;
-                // console.log('uid from Home page', uid);
-                setUserData(user)
-            } else {
-                console.log('user is logged out')
-            }
-        })
+        try {
+            setLoading(true);
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // const uid = user.uid;
+                    // console.log('uid from Home page', uid);
+                    setUserData(user)
+                } else {
+                    console.log('user is logged out');
+                    setLoading(false);
+                }
+            })
+            setLoading(false);
+
+        } catch (error) {
+            console.log('user Error');
+        }
+
     }, []);
 
     console.log('userData', userData);
+
+    if (loading) {
+        return (
+            <div className='w-full min-h-screen bg-slate-300'>
+                <Loader />
+            </div>
+        )
+    }
 
     return (
         <>
             <h1>Home</h1>
             <p>Email: {userData?.email}</p>
-            <PopupComponent />
+            <AddItemPopup />
 
             <div className='my-9'>
                 <NavLink to={'/store'} className={'border bg-green-600 text-black'}>Store</NavLink>

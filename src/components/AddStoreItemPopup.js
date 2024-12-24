@@ -3,12 +3,10 @@ import React, { useEffect, useState } from 'react'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css';
 import { db } from '../firebase';
-import Loader from './Loader';
 import { getAuth } from 'firebase/auth';
 
-const PopupComponent = () => {
+const AddStoreItemPopup = ({ loading, setLoading }) => {
     const authUser = getAuth();
-    const [loading, setLoading] = useState(false);
     const [store, setStore] = useState({
         name: '',
         type: '',
@@ -56,14 +54,6 @@ const PopupComponent = () => {
     useEffect(() => {
         multipleQuantityToPrice();
     }, [store.price, store.quantity, store.total_price]);
-
-    if (loading) {
-        return (
-            <div className='w-full min-h-screen bg-slate-300'>
-                <Loader />
-            </div>
-        )
-    }
 
     return (
         <Popup
@@ -142,4 +132,4 @@ const PopupComponent = () => {
     )
 }
 
-export default PopupComponent
+export default AddStoreItemPopup

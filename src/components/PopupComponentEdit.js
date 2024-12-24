@@ -6,8 +6,8 @@ import { db } from '../firebase';
 import Loader from './Loader';
 import { getAuth } from 'firebase/auth';
 
-const PopupComponentEdit = ({ id, initialData }) => {
-    const [loading, setLoading] = useState(false);
+const PopupComponentEdit = ({ id, initialData, setStoreItems, storeItems, loading, setLoading }) => {
+    // const [loading, setLoading] = useState(false);
     const [store, setStore] = useState({
         name: '',
         type: '',
@@ -25,12 +25,10 @@ const PopupComponentEdit = ({ id, initialData }) => {
             ...prev,
             [name]: newValue,
         }));
-        console.log('store from HandleChange function', store)
     };
 
     const fetchSellsItems = async () => {
         try {
-            setLoading(true);
             const querySnapshot = await getDocs(collection(db, "sells"));
             const newData = querySnapshot.docs.map((itemDoc) => ({
                 ...itemDoc.data(),
@@ -38,18 +36,17 @@ const PopupComponentEdit = ({ id, initialData }) => {
             })).filter(item => item?.userId === authUser?.currentUser?.uid);
 
             setSellsItem(newData);
-            setLoading(false);
 
             console.log('Fetched data:', newData);
         } catch (error) {
             console.error('Error fetching documents:', error);
-            setLoading(false);
         }
     }
 
     const editItem = async () => {
         try {
             setLoading(true);
+
             const updateDocItem = await updateDoc(doc(db, "store", id), {
                 'store.name': store.name,
                 'store.type': store.type,
@@ -57,7 +54,44 @@ const PopupComponentEdit = ({ id, initialData }) => {
                 'store.price': store.price,
                 'store.total_price': store.price * store.quantity,
             });
-            console.log('updateDocItem from editItem function', updateDocItem);
+
+            setStoreItems(prevItems => prevItems.map(item =>
+                item.id === id ? {
+                    ...item,
+                    store: {
+                        ...item.store,
+                        name: store.name,
+                        type: store.type,
+                        quantity: store.quantity,
+                        price: store.price,
+                        total_price: store.price * store.quantity,
+                    }
+                } : item
+            ));
+
+            // Находим элементы из коллекции Sells, связанные с этим Store item
+            const sellsQuerySnapshot = await getDocs(collection(db, "sells"));
+            const relatedSellsItems = sellsQuerySnapshot.docs.filter(doc => doc.data().storeItemId === id);
+
+            // Обновляем все связанные элементы в коллекции Sells
+            for (const sellDoc of relatedSellsItems) {
+                const sellData = sellDoc.data();
+
+                const updatedSellsData = {
+                    ...sellData.sells,
+                    name: store.name,
+                    type: store.type,
+                    price: store.price,
+                    quantity: store.quantity, // Обновляем только если требуется
+                    total_price: store.price * sellData.soldNumber, // Пересчитываем итоговую цену на основе новой цены
+                };
+
+                await updateDoc(doc(db, "sells", sellDoc.id), {
+                    sells: updatedSellsData,
+                });
+            };
+
+            console.log("Store and related Sells items updated successfully.");
             setLoading(false);
         } catch (error) {
             console.log('error of adding item', error);
@@ -70,7 +104,7 @@ const PopupComponentEdit = ({ id, initialData }) => {
             setLoading(true);
 
             const storeDocRef = doc(db, "store", storeItemId);
-            const storeDocSnap = await getDoc(storeDocRef);
+            const storeDocSnap = await getDoc(storeDocRef); // fetch to Store
 
             if (!storeDocSnap.exists()) {
                 console.error(`Store document with ID ${storeItemId} not found.`);
@@ -78,9 +112,9 @@ const PopupComponentEdit = ({ id, initialData }) => {
                 return;
             }
 
-            const currentStoreData = storeDocSnap.data();
+            const currentStoreData = storeDocSnap.data(); // getting data from Store
 
-            const newQuantityInStore = currentStoreData.store.quantity - Number(toSelling);
+            const newQuantityInStore = currentStoreData.store.quantity - Number(toSelling); // changed Quantity In Store
 
             if (newQuantityInStore < 0) {
                 console.error("Not enough items in store for selling.");
@@ -90,30 +124,24 @@ const PopupComponentEdit = ({ id, initialData }) => {
 
             const newTotalPrice = newQuantityInStore * currentStoreData.store.price;
 
-            const updadeRefDocStoreItem = await updateDoc(storeDocRef, {
+            const updadeRefDocStoreItem = await updateDoc(storeDocRef, { // update of Quantity and Total_price
                 'store.quantity': newQuantityInStore,
                 'store.total_price': newTotalPrice,
             });
 
-            console.log(`Updated store document: ${storeItemId} successfully.`);
 
+            const existingItem = sellsItem.find(item => item.storeItemId === storeItemId); // в sells элементах находим те, которые соответствуют store (sells.storeItemId === store.id)
+            const pricePerUnit = currentStoreData.store.price; // отдельная цена за конкретный товар
 
+            if (existingItem) { // если товар уже был ранее списан
+                const totalSoldUnits = existingItem.soldNumber + Number(toSelling); // общее кол-во проданных
+                const newTotalPrice = totalSoldUnits * pricePerUnit; // обновлённое значение total_price
 
-
-
-            const existingItem = sellsItem.find(item => item.storeItemId === storeItemId);
-            console.log('existingItem from sellingNum func', existingItem);
-            const pricePerUnit = currentStoreData.store.price;
-
-            if (existingItem) {
-                const totalSoldUnits = existingItem.soldNumber + Number(toSelling);
-                const newTotalPrice = totalSoldUnits * pricePerUnit;
-
-                const initialTotalPrice = Number(toSelling) * pricePerUnit;
+                // const initialTotalPrice = Number(toSelling) * pricePerUnit;
 
                 const newQuantityInSells = currentStoreData.store.quantity - Number(toSelling); // Берем из store!
 
-                const updatedocRef = await updateDoc(doc(db, "sells", existingItem.id), {
+                const updatedocRef = await updateDoc(doc(db, "sells", existingItem.id), { // вызов обновления soldNumber, total_price, quantity 
                     soldNumber: existingItem.soldNumber + Number(toSelling),
                     sells: {
                         ...existingItem.sells,
@@ -121,27 +149,31 @@ const PopupComponentEdit = ({ id, initialData }) => {
                         quantity: newQuantityInSells
                     },
                 });
-                console.log('updatedocRef from toSellingNumber function', updatedocRef);
-                console.log(`Item with storeItemId ${storeItemId} updated successfully.`);
-            } else {
-                const initialTotalPrice = Number(toSelling) * pricePerUnit;
+            } else { // если товар не был ранее списан
+                const initialTotalPrice = Number(toSelling) * pricePerUnit; // обновлённое значение total_price (кол-во проданных * цену)
 
                 const docRef = await addDoc(collection(db, "sells"), {
                     sells: {
                         ...currentStoreData.store,
-                        quantity: newQuantityInStore, // Создаем с новым количеством
-                        total_price: initialTotalPrice,
+                        quantity: newQuantityInStore, // обновлённое кол-во товаров
+                        total_price: initialTotalPrice, // обновленный total price
                     },
-                    soldNumber: Number(toSelling),
-                    userId: authUser?.currentUser?.uid,
-                    storeItemId,
+                    soldNumber: Number(toSelling), // кол-во проданных
+                    userId: authUser?.currentUser?.uid, // привязка к юзеру
+                    storeItemId, // привязка к Store
                 });
-
-                console.log('docRef from toSellingNumber function', docRef);
             }
 
-            console.log('storeItemId', storeItemId);
-
+            setStoreItems(prevItems => prevItems.map(item => // динамичное обвноление данных из Store
+                item.id === storeItemId ? {
+                    ...item,
+                    store: {
+                        ...item.store,
+                        quantity: newQuantityInStore,
+                        total_price: newTotalPrice,
+                    }
+                } : item
+            ));
 
             setLoading(false);
         } catch (error) {
@@ -164,11 +196,6 @@ const PopupComponentEdit = ({ id, initialData }) => {
     useEffect(() => {
         fetchSellsItems();
     }, []);
-
-    console.log('sellsItem from editComponent', sellsItem);
-    console.log('storeItem from editComponent', store);
-
-    if (loading) return <div className='w-full min-h-screen bg-slate-300'><Loader /></div>
 
     return (
         <Popup
