@@ -9,7 +9,7 @@ const Sells = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [sellsItems, setSellsItems] = useState([]);
-  const categories = ['Name', 'Type', 'Quantity', "Price", "Total price", "Sold Number"];
+  const categories = ['Name', 'Type', 'Quantity', "Price", "Sold Number", "Total price"];
   const authUser = getAuth();
 
   const fetchPost = async () => {
@@ -89,11 +89,12 @@ const Sells = () => {
                     {item.sells.price}
                   </td>
                   <td className="px-6 py-4">
-                    {item.sells.total_price}
-                  </td>
-                  <td className="px-6 py-4">
                     {item.soldNumber}
                   </td>
+                  <td className="px-6 py-4">
+                    {item.sells.total_price}
+                  </td>
+                  
                   {/* <td className="px-6 py-4 text-right">
                     <PopupComponentEdit id={item.id} initialData={item.store} />
                   </td> */}
@@ -107,7 +108,7 @@ const Sells = () => {
           </tbody>
         </table>
       </div>
-      <button onClick={() => navigate(-1)}>Back</button>
+      <button className='p-2 mt-5 w-28 text-center rounded-lg bg-red-600 text-sm text-white' onClick={() => navigate(-1)}>Назад</button>
     </div>
   )
 }

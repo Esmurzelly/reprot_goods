@@ -108,12 +108,17 @@
   cursor: pointer;
   position: absolute;
   display: block;
-  padding: 2px 5px;
+  height: 30px;
+  padding: 3px 5px;
   line-height: 20px;
   right: -10px;
   top: -10px;
   font-size: 24px;
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: 10px;
   border: 1px solid #cfcece;
 }
+
+/* .modal > .close > span {
+  transform: translateX(20px)
+} */

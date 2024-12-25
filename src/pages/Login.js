@@ -15,65 +15,65 @@ const LogIn = () => {
       .then((userCredential) => {
         const user = userCredential.user;
         navigate('/');
-        console.log('user from Login', user);
-        toast("You logged in successfully!");
+        toast.success("Вы успешно вошли в приложение!");
       })
       .catch(error => {
-        console.log('error from Login', error);
-        toast("Error");
+        toast.error("Ошибка, проверьте данные", error);
       });
   };
 
   return (
-    <main className='w-full'>
-      <div className='w-full flex flex-col items-center border max-w-5xl m-auto'>
-        <p> FocusApp </p>
+    <div className='w-full'>
+      <div className='w-full flex flex-col items-center max-w-5xl m-auto mt-2'>
+        <h1> Вход </h1>
 
-        <form>
-          <div>
-            <label htmlFor='email-address'>Email address</label>
+        <form className='mt-2 flex flex-col gap-3'>
+          <div className='flex flex-row items-center justify-between gap-3'>
+            <label htmlFor='email-address'>Email</label>
             <input
               id='email-address'
               type='email'
               name='email'
+              className='border px-2 py-1'
               required
               value={email}
-              placeholder='Email address'
+              placeholder='Введите email'
               onChange={e => setEmail(e.target.value)} />
           </div>
 
-          <div>
+          <div className='flex flex-row items-center gap-3'>
             <label htmlFor="password">
-              Password
+              Пароль
             </label>
             <input
               id="password"
               name="password"
               type="password"
+              className='border px-2 py-1'
               required
-              placeholder="Password"
+              placeholder="Введите пароль"
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          <div>
+          <div className='text-center'>
             <button
               onClick={onLogin}
               className='text-green-800 font-bold'
             >
-              Login
+              Войти
             </button>
           </div>
         </form>
 
-        <p className="text-sm text-red-600 font-bold text-center">
-          No account yet? {' '}
-          <NavLink to="/signup">
-            Sign up
+        <p className="text-sm mt-3 text-center">
+          Нет аккаунта? {' '}
+          <NavLink to="/signup" className={"text-red-600 font-bold"}>
+            Зарегистрироваться
           </NavLink>
         </p>
       </div>
-    </main>
+    </div>
   )
 }
 

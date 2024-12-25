@@ -1,11 +1,12 @@
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css';
 import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
+import { toast } from 'react-toastify';
 
-const AddStoreItemPopup = ({ loading, setLoading }) => {
+const AddStoreItemPopup = ({ setLoading, setStoreItems }) => {
     const authUser = getAuth();
     const [store, setStore] = useState({
         name: '',
@@ -44,9 +45,22 @@ const AddStoreItemPopup = ({ loading, setLoading }) => {
             });
 
             console.log('docRef from addItem function', docRef);
-            setLoading(false);
+
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const newItem = {
+                    id: docRef.id, // ID документа
+                    ...docSnap.data() // Данные из документа
+                };
+
+                // Динамическое обновление списка storeItems
+                setStoreItems(prevItems => [newItem, ...prevItems]);
+                toast.success('Item is added successfully!')
+                setLoading(false);
+            }
         } catch (error) {
-            console.log('error of adding item', error);
+            toast.error('error of adding item:', error)
             setLoading(false);
         }
     }
@@ -57,37 +71,37 @@ const AddStoreItemPopup = ({ loading, setLoading }) => {
 
     return (
         <Popup
-            trigger={<button className="button"> Add item </button>}
+            trigger={<button className="button"> Добавить </button>}
             modal
             nested
         >
             {close => (
                 <div className="modal">
                     <button className="close" onClick={close}>
-                        &times;
+                        <span>X</span>
                     </button>
-                    <div className="header"> Modal Title </div>
+                    <div className="header"> Добавление товара </div>
                     <div className="content flex flex-col">
                         <div className='w-1/2 flex flex-col items-start gap-2'>
                             <div className='w-full flex flex-row justify-between'>
-                                <label>Name</label>
-                                <input value={store.name} name='name' className='border w-48' type='text' onChange={handleChange} />
+                                <label>Название</label>
+                                <input required value={store.name} name='name' className='border w-48 p-1' type='text' onChange={handleChange} />
                             </div>
                             <div className='w-full flex flex-row justify-between'>
-                                <label>Type</label>
-                                <input value={store.type} name='type' className='border w-48' type='text' onChange={handleChange} />
+                                <label>Категория</label>
+                                <input required value={store.type} name='type' className='border w-48 p-1' type='text' onChange={handleChange} />
                             </div>
                             <div className='w-full flex flex-row justify-between'>
-                                <label>Quantity</label>
-                                <input value={store.quantity} name='quantity' className='border w-48' type='number' onChange={handleChange} />
+                                <label>Количество</label>
+                                <input required value={store.quantity} name='quantity' className='border w-48 p-1' type='number' onChange={handleChange} />
                             </div>
                             <div className='w-full flex flex-row justify-between'>
-                                <label>Price</label>
-                                <input value={store.price} name='price' className='border w-48' type='number' onChange={handleChange} />
+                                <label>Цена</label>
+                                <input required value={store.price} name='price' className='border w-48 p-1' type='number' onChange={handleChange} />
                             </div>
                             <div className='w-full flex flex-row justify-between'>
-                                <label>Total price</label>
-                                <input value={store.total_price} name='total_price' className='border w-48' type='number' onChange={handleChange} />
+                                <label>Цена всех товаров</label>
+                                <input required value={store.total_price} name='total_price' className='border w-48 p-1' type='number' onChange={handleChange} />
                             </div>
                             {/* <div className='w-full flex flex-row justify-between'>
                                 <label>Date arriving</label>
@@ -119,12 +133,14 @@ const AddStoreItemPopup = ({ loading, setLoading }) => {
                             close modal
                         </button> */}
 
-                        <button type='submit' onClick={(e) => {
-                            addItem(e);
-                            close();
-                        }}>
-                            Add item
-                        </button>
+                        <div className='w-1/2 flex justify-end'>
+                            <button className='p-2 rounded-lg bg-green-600 text-white' type='submit' onClick={(e) => {
+                                addItem(e);
+                                close();
+                            }}>
+                                Добавить товар
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

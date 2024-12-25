@@ -5,9 +5,9 @@ import 'reactjs-popup/dist/index.css';
 import { db } from '../firebase';
 import Loader from './Loader';
 import { getAuth } from 'firebase/auth';
+import { toast } from 'react-toastify';
 
-const PopupComponentEdit = ({ id, initialData, setStoreItems, storeItems, loading, setLoading }) => {
-    // const [loading, setLoading] = useState(false);
+const PopupComponentEdit = ({ id, initialData, setStoreItems, setLoading }) => {
     const [store, setStore] = useState({
         name: '',
         type: '',
@@ -91,10 +91,10 @@ const PopupComponentEdit = ({ id, initialData, setStoreItems, storeItems, loadin
                 });
             };
 
-            console.log("Store and related Sells items updated successfully.");
+            toast.success('Store and related Sells items updated successfully');
             setLoading(false);
         } catch (error) {
-            console.log('error of adding item', error);
+            toast.error(`error of adding item: ${error}`)
             setLoading(false);
         }
     };
@@ -104,7 +104,7 @@ const PopupComponentEdit = ({ id, initialData, setStoreItems, storeItems, loadin
             setLoading(true);
 
             const storeDocRef = doc(db, "store", storeItemId);
-            const storeDocSnap = await getDoc(storeDocRef); // fetch to Store
+            const storeDocSnap = await getDoc(storeDocRef); // fetch from Store
 
             if (!storeDocSnap.exists()) {
                 console.error(`Store document with ID ${storeItemId} not found.`);
@@ -176,9 +176,19 @@ const PopupComponentEdit = ({ id, initialData, setStoreItems, storeItems, loadin
             ));
 
             setLoading(false);
+            toast.success('Товар успешно списан');
         } catch (error) {
-            console.log('error of adding item', error);
+            toast.error(`error of changing item, ${error}`)
             setLoading(false);
+        }
+    }
+
+    const handleToSellingItemChange = e => {
+        const value = Number(e.target.value);
+        if(value <= store.quantity) {
+            setToSelling(value)
+        } else {
+            setToSelling(store.quantity)
         }
     }
 
@@ -199,7 +209,7 @@ const PopupComponentEdit = ({ id, initialData, setStoreItems, storeItems, loadin
 
     return (
         <Popup
-            trigger={<button className="button"> Edit item </button>}
+            trigger={<button className="button"> Изменить </button>}
             modal
             nested
             className='className="font-medium text-blue-600 dark:text-blue-500 hover:underline"'
@@ -234,9 +244,9 @@ const PopupComponentEdit = ({ id, initialData, setStoreItems, storeItems, loadin
                             <div className='w-full flex flex-row justify-between'>
                                 <div className='flex flex-row justify-between'>
                                     <label>To selling</label>
-                                    <input value={toSelling} name='toSelling' className='border w-48' type='number' onChange={(e) => setToSelling(e.target.value)} />
+                                    <input value={toSelling} max={store.quantity} name='toSelling' className='border w-48' type='number' onChange={handleToSellingItemChange} />
                                 </div>
-                                <button onClick={() => toSellingNumber(id)}>Send</button>
+                                <button disabled={toSelling.length === 0} onClick={() => toSellingNumber(id)}>Send</button>
                             </div>
 
                             {/* <div className='w-full flex flex-row justify-between'>

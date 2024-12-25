@@ -8,42 +8,25 @@ import Sells from './pages/Sells';
 import Layout from './components/Layout'
 import { getAuth } from 'firebase/auth';
 import { ToastContainer } from 'react-toastify';
-import { useEffect } from 'react';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const authUser = getAuth();
 
-  // useEffect(() => {
-  //   onAuthStateChanged(auth, (user) => {
-  //     if (user) {
-  //       setUserData(user)
-  //     } else {
-  //       console.log('user is logged out')
-  //     }
-  //   })
-  // }, []);
-
-  // console.log('user data from App.js', userData)
-
-
-  // doesn't show auth??
-  // useEffect(() => { 
-  //   console.log('auth', authUser.currentUser);
-  // }, [authUser.currentUser]);
   return (
     <BrowserRouter>
       <Routes>
         <Route path='/' element={<Layout />}>
-          {authUser 
-            ? <Route index element={<Home />} /> 
-            :  <Route index element={<LogIn />} /> 
-          }
           <Route index element={<Home />} />
           <Route path='/login' element={<LogIn />} />
           <Route path='/signup' element={<SignUp />} />
-          <Route path='/store' element={<Store />} />
-          <Route path='/sells' element={<Sells />} />
-          <Route path='/signup' element={<NotFound />} />
+          <Route path='/store' element={<ProtectedRoute>
+            <Store />
+          </ProtectedRoute>} />
+          <Route path='/sells' element={<ProtectedRoute>
+            <Sells />
+          </ProtectedRoute>} />
+          <Route path='*' element={<NotFound />} />
         </Route>
       </Routes>
       <ToastContainer />

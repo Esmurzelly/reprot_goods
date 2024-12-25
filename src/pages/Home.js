@@ -2,8 +2,9 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import React, { useEffect, useState } from 'react'
 import { auth } from '../firebase';
 import { useNavigate, NavLink } from 'react-router-dom';
-import AddItemPopup from '../components/AddStoreItemPopup'
 import Loader from '../components/Loader';
+import { toast } from 'react-toastify';
+import userAvatar from '../assets/user.png'
 
 const Home = () => {
     const [userData, setUserData] = useState();
@@ -14,9 +15,9 @@ const Home = () => {
     const handleLogout = () => {
         signOut(auth).then(() => {
             navigate('/login');
-            console.log("Signed out successfully");
+            toast("Signed out successfully");
         }).catch(error => {
-            console.log('error from logging out', error)
+            toast.error('error from logging out', error)
         })
     }
 
@@ -25,23 +26,19 @@ const Home = () => {
             setLoading(true);
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    // const uid = user.uid;
-                    // console.log('uid from Home page', uid);
                     setUserData(user)
                 } else {
-                    console.log('user is logged out');
+                    toast('user is not found');
                     setLoading(false);
                 }
             })
             setLoading(false);
 
         } catch (error) {
-            console.log('user Error');
+            toast.error('user Error');
         }
 
     }, []);
-
-    console.log('userData', userData);
 
     if (loading) {
         return (
@@ -52,21 +49,19 @@ const Home = () => {
     }
 
     return (
-        <>
-            <h1>Home</h1>
-            <p>Email: {userData?.email}</p>
-            <AddItemPopup />
-
-            <div className='my-9'>
-                <NavLink to={'/store'} className={'border bg-green-600 text-black'}>Store</NavLink>
-                <NavLink to={'/sells'} className={'border bg-green-600 text-black'}>Sells</NavLink>
+        <div className='mt-8'>
+            <div className='flex flex-row items-start justify-between'>
+                <img className='w-12' src={userAvatar} alt="Аватарка" />
+                <p>Ваш email: <span className='font-medium'>{userData?.email}</span></p>
             </div>
 
-            {/* tableComponent */}
+            <div className='my-9 flex flex-col items-start gap-2'>
+                <NavLink to={'/store'} className={'p-3 w-60 bg-green-600 text-white'}>Склад</NavLink>
+                <NavLink to={'/sells'} className={'p-3 w-60 bg-green-600 text-white'}>Продажи</NavLink>
+            </div>
 
-            {userData ? <button onClick={handleLogout}>Log out</button> : <NavLink to={'/login'}>Login</NavLink>}
-
-        </>
+            {userData ? <button className='p-2 mt-7 text-left rounded-lg bg-red-600 text-sm text-white' onClick={handleLogout}>Выйти из аккаунта</button> : <NavLink className='p-2 mt-7 text-left rounded-lg bg-green-600 text-sm text-white' to={'/login'}>Войти</NavLink>}
+        </div>
     )
 }
 

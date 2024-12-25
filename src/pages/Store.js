@@ -6,6 +6,7 @@ import { db } from '../firebase';
 import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
+import { toast } from 'react-toastify';
 
 const Store = () => {
   const [storeItems, setStoreItems] = useState([]);
@@ -33,18 +34,28 @@ const Store = () => {
   }
 
   const deleteItem = async (id) => {
-    console.log('id of item from DeleteFunc', id);
     try {
       setLoading(true);
+
+      const sellsQuerySnapshot = await getDocs(collection(db, "sells"));
+      const relatedSellsItems = sellsQuerySnapshot.docs.filter(doc => doc.data().storeItemId === id);
+
+      if (relatedSellsItems) {
+        for (const sellDoc of relatedSellsItems) {
+          await deleteDoc(doc(db, "sells", sellDoc.id));
+        }
+      };
+
       await deleteDoc(doc(db, "store", id));
       setStoreItems(prevItems => prevItems.filter(item => item.id !== id));
-      console.log(`Item with ID ${id} deleted successfully.`);
+      toast.success(`Item deleted successfully`);
+
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching documents:', error);
+      toast.error(`Error fetching documents, ${error}`);
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchPost();
@@ -60,10 +71,10 @@ const Store = () => {
 
   return (
     <div className='relative'>
-      <h1 className='text-3xl'>Store</h1>
-      <AddStoreItemPopup loading={loading} setLoading={setLoading} />
+      <h1 className='text-3xl my-3'>Склад</h1>
+      <AddStoreItemPopup loading={loading} setLoading={setLoading} setStoreItems={setStoreItems} />
 
-      <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+      <div className="relative overflow-x-auto shadow-md sm:rounded-lg mt-3">
         <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
@@ -73,10 +84,10 @@ const Store = () => {
                 </th>
               ))}
               <th scope="col" className="px-6 py-3">
-                <span className="sr-only">Edit</span>
+                <span className="sr-only">Изменить</span>
               </th>
               <th scope="col" className="px-6 py-3">
-                <span className="sr-only">Delete</span>
+                <span className="sr-only">Удалить</span>
               </th>
             </tr>
           </thead>
@@ -104,13 +115,12 @@ const Store = () => {
                   <td className="px-6 py-4">
                     {item.store.total_price}
                   </td>
-                  <td className="px-6 py-4 text-right"> 
-                    {/* problem is here!!! */}
+                  <td className="px-6 py-4 text-right">
                     <PopupComponentEdit id={item.id} initialData={item.store} setStoreItems={setStoreItems} storeItems={storeItems} loading={loading} setLoading={setLoading} />
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button onClick={() => deleteItem(item.id)} className="font-medium text-red-600 dark:text-red-500 hover:underline">
-                      Delete
+                      Удалить
                     </button>
                   </td>
                 </tr>
@@ -118,10 +128,8 @@ const Store = () => {
           </tbody>
         </table>
       </div>
-      <button onClick={() => navigate(-1)}>Back</button>
-
+      <button className='p-2 mt-5 w-28 text-center rounded-lg bg-red-600 text-sm text-white' onClick={() => navigate(-1)}>Назад</button>
     </div>
-
   )
 }
 
