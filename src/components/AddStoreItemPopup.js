@@ -5,6 +5,7 @@ import 'reactjs-popup/dist/index.css';
 import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
 import { toast } from 'react-toastify';
+import { IoMdClose } from "react-icons/io";
 
 const AddStoreItemPopup = ({ setLoading, setStoreItems }) => {
     const authUser = getAuth();
@@ -44,8 +45,6 @@ const AddStoreItemPopup = ({ setLoading, setStoreItems }) => {
                 userId: authUser?.currentUser?.uid
             });
 
-            console.log('docRef from addItem function', docRef);
-
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
@@ -56,11 +55,11 @@ const AddStoreItemPopup = ({ setLoading, setStoreItems }) => {
 
                 // Динамическое обновление списка storeItems
                 setStoreItems(prevItems => [newItem, ...prevItems]);
-                toast.success('Item is added successfully!')
+                toast.success('Товар успешно добавлен!')
                 setLoading(false);
             }
         } catch (error) {
-            toast.error('error of adding item:', error)
+            toast.error('Ошибка добавления товара:', error);
             setLoading(false);
         }
     }
@@ -71,14 +70,14 @@ const AddStoreItemPopup = ({ setLoading, setStoreItems }) => {
 
     return (
         <Popup
-            trigger={<button className="button"> Добавить </button>}
+            trigger={<button className="button p-2 text-center rounded-lg bg-green-600 text-sm text-white"> Добавить товар </button>}
             modal
             nested
         >
             {close => (
                 <div className="modal">
                     <button className="close" onClick={close}>
-                        <span>X</span>
+                        <IoMdClose />
                     </button>
                     <div className="header"> Добавление товара </div>
                     <div className="content flex flex-col">
@@ -100,7 +99,7 @@ const AddStoreItemPopup = ({ setLoading, setStoreItems }) => {
                                 <input required value={store.price} name='price' className='border w-48 p-1' type='number' onChange={handleChange} />
                             </div>
                             <div className='w-full flex flex-row justify-between'>
-                                <label>Цена всех товаров</label>
+                                <label>Общая стоимость</label>
                                 <input required value={store.total_price} name='total_price' className='border w-48 p-1' type='number' onChange={handleChange} />
                             </div>
                             {/* <div className='w-full flex flex-row justify-between'>

@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 const Store = () => {
   const [storeItems, setStoreItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const categories = ['Name', 'Type', 'Quantity', "Price", "Total price"];
+  const categories = ['Название', 'Категория', 'Количество', "Цена за единицу", "Общая стоимость"];
   const navigate = useNavigate();
   const authUser = getAuth();
 

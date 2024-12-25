@@ -6,6 +6,7 @@ import { db } from '../firebase';
 import Loader from './Loader';
 import { getAuth } from 'firebase/auth';
 import { toast } from 'react-toastify';
+import { IoMdClose } from 'react-icons/io';
 
 const PopupComponentEdit = ({ id, initialData, setStoreItems, setLoading }) => {
     const [store, setStore] = useState({
@@ -185,7 +186,7 @@ const PopupComponentEdit = ({ id, initialData, setStoreItems, setLoading }) => {
 
     const handleToSellingItemChange = e => {
         const value = Number(e.target.value);
-        if(value <= store.quantity) {
+        if (value <= store.quantity) {
             setToSelling(value)
         } else {
             setToSelling(store.quantity)
@@ -217,36 +218,45 @@ const PopupComponentEdit = ({ id, initialData, setStoreItems, setLoading }) => {
             {close => (
                 <div className="modal">
                     <button className="close" onClick={close}>
-                        &times;
+                        <IoMdClose />
                     </button>
-                    <div className="header"> Edit data </div>
-                    <div className="content flex flex-col">
-                        <div className='w-1/2 flex flex-col items-start gap-2'>
-                            <div className='w-full flex flex-row justify-between'>
-                                <label>Name</label>
-                                <input value={store.name} name='name' className='border w-48' type='text' onChange={handleChange} />
-                            </div>
-                            <div className='w-full flex flex-row justify-between'>
-                                <label>Type</label>
-                                <input value={store.type} name='type' className='border w-48' type='text' onChange={handleChange} />
-                            </div>
-                            <div className='w-full flex flex-row justify-between'>
-                                <label>Quantity</label>
-                                <input value={store.quantity} name='quantity' className='border w-48' type='number' onChange={handleChange} />
-                            </div>
-                            <div className='w-full flex flex-row justify-between'>
-                                <label>Price</label>
-                                <input value={store.price} name='price' className='border w-48' type='number' onChange={handleChange} />
-                            </div>
-
-                            <hr className='w-full ' />
-
-                            <div className='w-full flex flex-row justify-between'>
-                                <div className='flex flex-row justify-between'>
-                                    <label>To selling</label>
-                                    <input value={toSelling} max={store.quantity} name='toSelling' className='border w-48' type='number' onChange={handleToSellingItemChange} />
+                    <div className="header"> Изменить </div>
+                    <div className="content">
+                        <div className='flex flex-row gap-5'>
+                            <div className='w-1/2 flex flex-col items-start gap-2'>
+                                <div className='w-full flex flex-row justify-between'>
+                                    <label>Название</label>
+                                    <input value={store.name} name='name' className='border w-48 p-1' type='text' onChange={handleChange} />
                                 </div>
-                                <button disabled={toSelling.length === 0} onClick={() => toSellingNumber(id)}>Send</button>
+                                <div className='w-full flex flex-row justify-between'>
+                                    <label>Категория</label>
+                                    <input value={store.type} name='type' className='border w-48 p-1' type='text' onChange={handleChange} />
+                                </div>
+                                <div className='w-full flex flex-row justify-between'>
+                                    <label>Количество</label>
+                                    <input value={store.quantity} name='quantity' className='border w-48 p-1' type='number' onChange={handleChange} />
+                                </div>
+                                <div className='w-full flex flex-row justify-between'>
+                                    <label>Цена</label>
+                                    <input value={store.price} name='price' className='border w-48 p-1' type='number' onChange={handleChange} />
+                                </div>
+                                <div className="actions mt-7">
+                                        <button className='p-2 rounded-lg bg-green-600 text-white' type='submit' onClick={() => {
+                                            editItem();
+                                            close();
+                                        }}>
+                                            Изменить
+                                        </button>
+
+                                </div>
+                            </div>
+
+                            <div className='w-1/2 flex flex-col justify-between items-start border border-l-2 border-t-0 border-r-0 border-b-0 pl-4'>
+                                <div className='flex flex-row justify-between w-full'>
+                                    <label>На продажу</label>
+                                    <input value={toSelling} max={store.quantity} name='toSelling' className='border w-48 p-1' type='number' onChange={handleToSellingItemChange} />
+                                </div>
+                                    <button className='p-2 rounded-lg bg-green-600 text-white' disabled={toSelling.length === 0} onClick={() => toSellingNumber(id)}>Отправить</button>
                             </div>
 
                             {/* <div className='w-full flex flex-row justify-between'>
@@ -259,14 +269,7 @@ const PopupComponentEdit = ({ id, initialData, setStoreItems, setLoading }) => {
                             </div> */}
                         </div>
                     </div>
-                    <div className="actions">
-                        <button type='submit' onClick={() => {
-                            editItem();
-                            close();
-                        }}>
-                            Edit item
-                        </button>
-                    </div>
+
                 </div>
             )}
         </Popup>

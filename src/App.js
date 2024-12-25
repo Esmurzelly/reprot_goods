@@ -11,8 +11,6 @@ import { ToastContainer } from 'react-toastify';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const authUser = getAuth();
-
   return (
     <BrowserRouter>
       <Routes>

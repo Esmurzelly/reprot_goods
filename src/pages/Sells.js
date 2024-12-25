@@ -9,7 +9,7 @@ const Sells = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [sellsItems, setSellsItems] = useState([]);
-  const categories = ['Name', 'Type', 'Quantity', "Price", "Sold Number", "Total price"];
+  const categories = ['Название', 'Категория', 'Количество', "Цена за единицу", "Количество проданных", "Общая  стоимость"];
   const authUser = getAuth();
 
   const fetchPost = async () => {
@@ -48,7 +48,7 @@ const Sells = () => {
 
   return (
     <div>
-      Sells
+      <h1 className='text-3xl my-3'>Продажи</h1>
 
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
